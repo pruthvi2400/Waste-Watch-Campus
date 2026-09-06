@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import api from '../api/axios';
+import { useReports } from '../hooks/useReports';
 import { useCampus } from '../hooks/useCampus';
-import reportService from '../services/reportService';
+
 import { getErrorMessage } from '../utils/errorHandler';
 import Loading from '../components/Loading';
 import ErrorMessage from '../components/ErrorMessage';
@@ -21,6 +21,8 @@ const RoomDetails = () => {
 
   const navigate = useNavigate();
 
+
+  const { updateStatus } = useReports();
   const fetchRoomDetails = async () => {
     try {
       const res = await api.get(`/api/campus/rooms/${id}`);
@@ -41,15 +43,19 @@ const RoomDetails = () => {
   const handleResolve = async (reportId) => {
     setUpdatingId(reportId);
     try {
-      await api.post(`/api/reports/update-status/${reportId}`, { status: 'Resolved' });
-      // Refresh details
-      await fetchRoomDetails();
+      const result = await updateStatus(reportId, 'Resolved');
+      if (result.success) {
+        await fetchRoomDetails();
+      } else {
+        alert(result.error || 'Failed to update report status');
+      }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update report status');
+      alert(getErrorMessage(err, 'Failed to update report status'));
     } finally {
       setUpdatingId(null);
     }
   };
+
 
   if (loading) {
     return (
@@ -59,13 +65,6 @@ const RoomDetails = () => {
     );
   }
 
-  if (!room) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8 text-center text-red-500">
-        Room not found!
-      </div>
-    );
-  }
 
   // Analytics
   const wasteTypes = {};
