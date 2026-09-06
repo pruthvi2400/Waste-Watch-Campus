@@ -1,49 +1,36 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import api from '../api/axios';
+import { useCampus } from '../hooks/useCampus';
+import Loading from '../components/Loading';
 import { Building, Layers, DoorOpen, FlaskConical, Info, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const BuildingDetails = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
-  const [building, setBuilding] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { currentBuilding, loading, error, fetchBuilding } = useCampus();
   const [selectedFloorIdx, setSelectedFloorIdx] = useState(0);
   const [selectedRoomType, setSelectedRoomType] = useState('classroom'); // 'classroom' or 'lab'
 
   useEffect(() => {
-    const fetchBuildingDetails = async () => {
-      try {
-        const res = await api.get(`/api/campus/buildings/${id}`);
-        setBuilding(res.data);
-      } catch (err) {
-        console.error('Error fetching building details:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBuildingDetails();
-  }, [id]);
+    if (id) {
+      fetchBuilding(id);
+    }
+  }, [id, fetchBuilding]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
-      </div>
-    );
+    return <Loading fullScreen />;
   }
 
-  if (!building) {
+  if (error || !currentBuilding) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 text-center text-red-500">
-        Building not found!
+        {error || 'Building not found!'}
       </div>
     );
   }
 
-  const currentFloor = building.floors[selectedFloorIdx];
+  const currentFloor = currentBuilding.floors[selectedFloorIdx];
   const roomsOnFloor = currentFloor ? currentFloor.rooms.filter(r => r.room_type === selectedRoomType) : [];
 
   return (
@@ -55,13 +42,13 @@ const BuildingDetails = () => {
           <span>Campus Map</span>
         </Link>
         <span>/</span>
-        <span className="text-gray-900 font-medium">{building.name}</span>
+        <span className="text-gray-900 font-medium">{currentBuilding.name}</span>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900 flex items-center space-x-2">
           <Building className="h-8 w-8 text-emerald-600" />
-          <span>{building.name}</span>
+          <span>{currentBuilding.name}</span>
         </h1>
         <p className="mt-2 text-lg text-gray-600">
           Explore floors and rooms to view reported waste or submit a new waste report in this wing.
@@ -71,7 +58,7 @@ const BuildingDetails = () => {
       {/* Floor Tab Controls */}
       <div className="border-b border-gray-200 mb-8">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {building.floors.map((floor, idx) => (
+          {currentBuilding.floors.map((floor, idx) => (
             <button
               key={floor._id}
               onClick={() => {

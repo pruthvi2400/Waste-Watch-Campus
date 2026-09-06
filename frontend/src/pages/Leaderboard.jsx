@@ -1,30 +1,18 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import api from '../api/axios';
+import { useLeaderboard } from '../hooks/useLeaderboard';
+import Loading from '../components/Loading';
+import ErrorMessage from '../components/ErrorMessage';
 import { Trophy, Award, Landmark, GraduationCap, Map, UserPlus, HelpCircle } from 'lucide-react';
 
 const Leaderboard = () => {
   const { user } = useContext(AuthContext);
-  const [overallScores, setOverallScores] = useState([]);
-  const [collegeData, setCollegeData] = useState({});
-  const [loading, setLoading] = useState(true);
+  const { overallScores, collegeData, loading, error, fetchLeaderboard } = useLeaderboard();
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const res = await api.get('/api/leaderboard');
-        setOverallScores(res.data.overall_scores);
-        setCollegeData(res.data.college_data);
-      } catch (err) {
-        console.error('Error fetching leaderboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLeaderboard();
-  }, []);
+  }, [fetchLeaderboard]);
 
   if (loading) {
     return (

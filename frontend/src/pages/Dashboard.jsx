@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import api from '../api/axios';
+import { useReports } from '../hooks/useReports';
+import { getErrorMessage } from '../utils/errorHandler';
+import Loading from '../components/Loading';
+import ErrorMessage from '../components/ErrorMessage';
+import StatusBadge from '../components/StatusBadge';
 import { CheckCircle, AlertTriangle, Clock, Shield, Building, Filter, ArrowRight, User as UserIcon } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { reports, loading, error, fetchAllReports, updateStatus } = useReports();
   const [filterSeverity, setFilterSeverity] = useState('All');
   const [filterBuilding, setFilterBuilding] = useState('All');
   const [resolvingId, setUpdatingId] = useState(null);
@@ -24,31 +27,21 @@ const Dashboard = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const fetchReports = async () => {
-    try {
-      const res = await api.get('/api/reports/all');
-      // Filter out already resolved reports to focus the dashboard on pending tasks
-      setReports(res.data);
-    } catch (err) {
-      console.error('Error fetching dashboard reports:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (user && user.user_type === 'cleaning_staff') {
-      fetchReports();
-    }
-  }, [user]);
+    fetchAllReports();
+  }, [fetchAllReports]);
 
   const handleResolve = async (reportId) => {
     setUpdatingId(reportId);
     try {
-      await api.post(`/api/reports/update-status/${reportId}`, { status: 'Resolved' });
-      await fetchReports();
+      const result = await updateStatus(reportId, 'Resolved');
+      if (result.success) {
+        await fetchAllReports();
+      } else {
+        alert(result.error);
+      }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update report status');
+      alert(getErrorMessage(err, 'Failed to update report status'));
     } finally {
       setUpdatingId(null);
     }

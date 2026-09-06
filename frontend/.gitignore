@@ -1,38 +1,42 @@
-# Dependencies
-node_modules/
-backend/node_modules/
-frontend/node_modules/
-
+@"
+# =========================
 # Environment variables
+# =========================
 .env
 .env.*
+!.env.example
 
-# Build files
-dist/
-build/
-.vite/
-
-# Logs
-logs/
-*.log
+# =========================
+# Node / MERN
+# =========================
+node_modules/
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
 
-# Python (leftover)
+# Build output
+dist/
+build/
+
+# =========================
+# Python / Flask (legacy)
+# =========================
 __pycache__/
 *.py[cod]
 *.sqlite3
 .venv/
+venv/
 
-# Uploads
-backend/uploads/
-frontend/uploads/
+# Flask uploads / database
+/static/uploads/
+instance/waste_management.db
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# VS Code
+# =========================
+# IDE / OS
+# =========================
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
+"@ | Set-Content .gitignore

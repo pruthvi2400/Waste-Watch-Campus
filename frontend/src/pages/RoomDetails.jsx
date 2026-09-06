@@ -2,6 +2,12 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
+import { useCampus } from '../hooks/useCampus';
+import reportService from '../services/reportService';
+import { getErrorMessage } from '../utils/errorHandler';
+import Loading from '../components/Loading';
+import ErrorMessage from '../components/ErrorMessage';
+import StatusBadge from '../components/StatusBadge';
 import { ArrowLeft, School, AlertTriangle, CheckCircle, Clock, Trash2, Shield, Calendar, User as UserIcon } from 'lucide-react';
 
 const RoomDetails = () => {
@@ -21,8 +27,8 @@ const RoomDetails = () => {
       setRoom(res.data.room);
       setReports(res.data.reports);
     } catch (err) {
-      console.error('Error fetching room details:', err);
-      setError('Failed to fetch room details');
+      // Error handled by hook
+      // Error handled by hook
     } finally {
       setLoading(false);
     }

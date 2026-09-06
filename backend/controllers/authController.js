@@ -1,102 +1,53 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const asyncHandler = require('../utils/asyncHandler');
+const { successResponse } = require('../utils/responseFormatter');
+const authService = require('../services/authService');
 
-// Helper to generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret_key_for_jwt', {
-    expiresIn: '30d'
-  });
-};
+/**
+ * @desc    Register a new user
+ * @route   POST /api/auth/register
+ * @access  Public
+ */
+const registerUser = asyncHandler(async (req, res) => {
+  const result = await authService.registerUser(req.body);
+  successResponse(res, result, 201);
+});
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
-const registerUser = async (req, res) => {
-  const { username, email, password, user_type } = req.body;
+/**
+ * @desc    Authenticate a user & get token
+ * @route   POST /api/auth/login
+ * @access  Public
+ */
+const authUser = asyncHandler(async (req, res) => {
+  const result = await authService.authUser(req.body);
+  successResponse(res, result);
+});
 
-  try {
-    const userExists = await User.findOne({ $or: [{ email }, { username }] });
+/**
+ * @desc    Get user profile
+ * @route   GET /api/auth/profile
+ * @access  Private
+ */
+const getUserProfile = asyncHandler(async (req, res) => {
+  const profile = await authService.getUserProfile(req.user._id);
+  successResponse(res, profile);
+});
 
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists with that email or username' });
-    }
-
-    const user = await User.create({
-      username,
-      email,
-      password,
-      user_type
-    });
-
-    if (user) {
-      res.status(201).json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        user_type: user.user_type,
-        token: generateToken(user._id)
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid user data' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during registration', error: error.message });
-  }
-};
-
-// @desc    Authenticate a user & get token
-// @route   POST /api/auth/login
-// @access  Public
-const authUser = async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const user = await User.findOne({ username });
-
-    if (user && (await user.matchPassword(password))) {
-      res.json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        user_type: user.user_type,
-        token: generateToken(user._id)
-      });
-    } else {
-      res.status(401).json({ message: 'Invalid username or password' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error during authentication', error: error.message });
-  }
-};
-
-// @desc    Get user profile
-// @route   GET /api/auth/profile
-// @access  Private
-const getUserProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-
-    if (user) {
-      res.json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        user_type: user.user_type,
-        created_at: user.created_at
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error fetching profile', error: error.message });
-  }
-};
+/**
+ * @desc    Logout user (client-side token handling)
+ * @route   POST /api/auth/logout
+ * @access  Public
+ * @note    For stateless JWT, logout is handled client-side by removing the token.
+ *          This endpoint exists for API consistency and future token blacklist support.
+ */
+const logout = asyncHandler(async (req, res) => {
+  // With stateless JWT, the server doesn't need to do anything
+  // The client should remove the token from storage
+  successResponse(res, { message: 'Logged out successfully. Token removal handled client-side.' });
+});
 
 module.exports = {
   registerUser,
   authUser,
-  getUserProfile
+  getUserProfile,
+  logout
 };

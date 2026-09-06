@@ -1,26 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api/axios';
+import { useCampus } from '../hooks/useCampus';
+import Loading from '../components/Loading';
 import { Building, DoorOpen, FlaskConical, GraduationCap, MapPin, MousePointer, Camera, ShieldCheck } from 'lucide-react';
 
 const Home = () => {
-  const [buildings, setBuildings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { buildings, loading, error, fetchBuildings } = useCampus();
 
   useEffect(() => {
-    const fetchBuildings = async () => {
-      try {
-        const res = await api.get('/api/campus/buildings');
-        setBuildings(res.data);
-      } catch (err) {
-        console.error('Error fetching buildings:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBuildings();
-  }, []);
+  }, [fetchBuildings]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -115,9 +104,7 @@ const Home = () => {
       {/* Building List Section */}
       <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Explore Campus Buildings</h2>
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
-        </div>
+        <Loading fullScreen />
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {buildings.map((building) => (

@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { UserPlus, User, Mail, Lock, Users, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import ErrorMessage from '../components/ErrorMessage';
+import { UserPlus, User, Mail, Lock, Users } from 'lucide-react';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -11,14 +12,14 @@ const Register = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, user } = useContext(AuthContext);
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,7 +44,7 @@ const Register = () => {
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.message);
+      setError(result.error);
     }
   };
 
@@ -65,12 +66,7 @@ const Register = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded flex items-start space-x-2 text-red-700 text-sm">
-            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <ErrorMessage message={error} className="mb-4" />}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
@@ -90,7 +86,7 @@ const Register = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-gray-900"
-                  placeholder="Choose a username"
+                  placeholder="Choose a username (min 3 chars)"
                 />
               </div>
             </div>

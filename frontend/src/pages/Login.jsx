@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { LogIn, User, Lock, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import ErrorMessage from '../components/ErrorMessage';
+import { LogIn, User, Lock } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -9,14 +10,14 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, user } = useContext(AuthContext);
+  const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +36,7 @@ const Login = () => {
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.message);
+      setError(result.error);
     }
   };
 
@@ -57,12 +58,7 @@ const Login = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded flex items-start space-x-2 text-red-700 text-sm">
-            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <ErrorMessage message={error} className="mb-4" />}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">

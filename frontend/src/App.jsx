@@ -11,6 +11,7 @@ import RoomDetails from './pages/RoomDetails';
 import Report from './pages/Report';
 import Leaderboard from './pages/Leaderboard';
 import Dashboard from './pages/Dashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -20,18 +21,57 @@ function App() {
           <Navbar />
           <main>
             <Routes>
-              {/* Home / Index page */}
+              {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/building/:id" element={<BuildingDetails />} />
-              <Route path="/room/:id" element={<RoomDetails />} />
-              <Route path="/report/:room_id" element={<Report />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               
-              {/* Catch all */}
+              {/* Protected routes - require authentication */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/building/:id"
+                element={
+                  <ProtectedRoute>
+                    <BuildingDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/room/:id"
+                element={
+                  <ProtectedRoute>
+                    <RoomDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/report/:room_id"
+                element={
+                  <ProtectedRoute>
+                    <Report />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Cleaning staff only routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['cleaning_staff']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Catch all - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
